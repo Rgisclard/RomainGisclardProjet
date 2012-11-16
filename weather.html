@@ -1,0 +1,184 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Weather app 0.7</title>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.9.1.custom.js"></script>
+<script type="text/javascript" src="js/highcharts.js"></script>
+<script type="text/javascript" src="js/modules/exporting.js"></script>
+<script type="text/javascript" src="js/source/jquery.fancybox.js?v=2.1.3"></script>
+<link rel="stylesheet" type="text/css" href="js/source/jquery.fancybox.css?v=2.1.2" media="screen" />
+<link href="css/style.css" rel="stylesheet" type="text/css" media="all">
+<link href="css/smoothness/jquery-ui-1.9.1.custom.css" rel="stylesheet">
+<link href='http://fonts.googleapis.com/css?family=Petit+Formal+Script' rel='stylesheet' type='text/css'>
+</head>
+<body>
+<header>
+	<div id="logo">
+		<h1>W<font style="font-size:32px;">eather </font></h1>
+	</div>
+	<form  id="search">
+		<input name="q"  title="A French City is required to proceed" type="text" size="40" placeholder="Search..." />
+	</form>
+	<div id="info">
+		<ul>
+			<li><font  style="font-size:14px">Detailed information:</font></li><br><br>
+
+			<li id="lat"></li>
+			<li id="lon"></li>
+			<li id="elv"></li>
+			<li id="dew"></li>
+			<li id="press"></li>
+			<li id="vism"></li>
+			<li id="vismi"></li>
+			<li id="prec"></li>
+		</ul>
+	</div>
+</header>
+<div id="location"></div>
+<section>
+	<div class="img"></div>
+	<div class="weather"></div>
+	<div id="container" style="min-width: 400px; height: 250px; margin: 0 auto;"></div>
+</section>
+<footer>
+<a id="button" class="fancybox fancybox.iframe" href="#">View Detailed Forecast</a>
+</footer>
+<script>
+var chart;
+$(document).ready(function() {
+	$(".fancybox").fancybox();
+	$(document).tooltip();
+	$('#search').submit(function(event){
+		event.preventDefault();
+	var city = $("input").val();
+	$.ajax({
+		url : "http://api.wunderground.com/api/fdb61d8a3c1e4be4/hourly/q/France/"+city+".json",
+		dataType : "jsonp",
+		success : function(parsed_json) {
+		temp = parseInt(parsed_json['hourly_forecast'][0]['temp']['metric']);
+		temp2 = parseInt(parsed_json['hourly_forecast'][2]['temp']['metric']);
+		temp3 = parseInt(parsed_json['hourly_forecast'][4]['temp']['metric']);
+		temp4 = parseInt(parsed_json['hourly_forecast'][6]['temp']['metric']);
+		temp5 = parseInt(parsed_json['hourly_forecast'][8]['temp']['metric']);
+		temp6 = parseInt(parsed_json['hourly_forecast'][10]['temp']['metric']);
+		temp7 = parseInt(parsed_json['hourly_forecast'][12]['temp']['metric']);
+		temp8 = parseInt(parsed_json['hourly_forecast'][14]['temp']['metric']);
+		temp9 = parseInt(parsed_json['hourly_forecast'][16]['temp']['metric']);
+		temp10 = parseInt(parsed_json['hourly_forecast'][18]['temp']['metric']);
+		temp11 = parseInt(parsed_json['hourly_forecast'][20]['temp']['metric']);
+		temp12 = parseInt(parsed_json['hourly_forecast'][22]['temp']['metric']);
+		},
+		error: function() {
+			alert("current city is not recognize");
+                }
+		});
+	$.ajax({
+		url : "http://api.wunderground.com/api/fdb61d8a3c1e4be4/geolookup/conditions/forecast/q/France/"+city+".json",
+		dataType : "jsonp",
+		success : function(parsed_json) {
+		var loc = parsed_json['location'].city;
+		var time = parsed_json['current_observation'].observation_time_rfc822;
+		var lat = parsed_json['location'].lat;
+		var lon = parsed_json['location'].lon;
+		var cntry = parsed_json['current_observation']['display_location'].state_name;
+		var temp_f = parsed_json['current_observation'].temp_f;
+		var temp_c = parsed_json['current_observation'].temp_c;
+		var icon_url = parsed_json['current_observation'].icon_url;
+		var icon = parsed_json['current_observation'].icon;
+		var hum = parsed_json['current_observation'].relative_humidity;
+		var wind = parsed_json['current_observation'].wind_string;
+		var elv = parsed_json['current_observation']['observation_location'].elevation;
+		var dew = parsed_json['current_observation'].dewpoint_c;
+		var press = parsed_json['current_observation'].pressure_mb;
+		var vism = parsed_json['current_observation'].visibility_km;
+		var vismi = parsed_json['current_observation'].visibility_mi;
+		var prec = parsed_json['current_observation'].precip_today_metric;
+		var flc = parsed_json['current_observation'].feelslike_c;
+		var flf = parsed_json['current_observation'].feelslike_f;
+		var href = parsed_json['current_observation'].forecast_url;
+		$('#location').empty();
+		$('.img').empty();
+		$('.weather').empty();
+		$('#lat').empty();
+		$('#lon').empty();
+		$('#elv').empty();
+		$('#dew').empty();
+		$('#press').empty();
+		$('#vism').empty();
+		$('#vismi').empty();
+		$('#prec').empty();
+		$('#lat').append('Latitude : '+lat);
+		$('#lon').append('Longitude : '+lon);
+		$('#elv').append('Elevation : '+elv);
+		$('#dew').append('Dewpoint : '+dew+' °C');
+		$('#press').append('Pressure : '+press+' mb');
+		$('#vism').append('Visibility : '+vism+' Km');
+		$('#vismi').append('Visibility : '+vismi+' Mi');
+		$('#prec').append('Precipitation : '+prec+' mm');
+		$('#location').append('<h1>'+loc+', '+cntry+'</h1><h4>'+time+'</h4>');
+		$('.img').append('<img src="'+icon_url+'" width="100" height="100">');
+		$('.weather').append('<p id="weath">'+icon+'&nbsp;&nbsp;&nbsp;'+temp_c+' °C&nbsp;&nbsp;|&nbsp; '+temp_f+' °C</p><p id="fl">Feelslike: '+flc+' °c | '+flf+' °f</p><p id="hum">Humidity: '+hum+'</p><p id="win">Wind: '+wind+'</p>');
+		$('#button').attr('href', href);
+		$('section').animate({right: "0"}, 1500,function(){
+			$('#location').animate({top: "0"},1500);
+			////////////chart////////////
+			chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'container',
+                type: 'line',
+                marginRight: 130,
+                marginBottom: 25
+            },
+            title: {
+                text: 'Today Average Temperature',
+                x: -20 //center
+            },
+            subtitle: {
+                text: '',
+                x: -20
+            },
+            xAxis: {
+                categories: ['3AM', '5AM', '7AM', '9AM', '11AM', '13AM',
+                    '15PM', '17PM', '19PM', '21PM', '22PM', '0PM']
+            },
+            yAxis: {
+                title: {
+                    text: 'Temperature (°C)'
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#999'
+                }]
+            },
+            tooltip: {
+                formatter: function() {
+                        return '<b>'+ this.series.name +'</b><br/>'+
+                        this.x +': '+ this.y +'°C';
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: loc,
+                data: [temp, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, temp12]
+            }]
+        });
+	////////////////////////////
+			
+			});
+		}
+		});
+	});
+});
+</script>
+</body>
+</html>
